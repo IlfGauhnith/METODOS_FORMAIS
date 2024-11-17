@@ -1,0 +1,75 @@
+
+-- LUCAS EDUARDO DA SILVA BURLE
+
+-- QUESTAO 1 
+datatype DIA = SEGUNDA | TERCA | QUARTA
+channel dia : DIA 
+channel acordar, comer, academia, aula_teste_software, aula_metodologias_ageis, aula_metodos_formais, aula_apsoo, aula_engenharia_requisitos
+
+MAIN_SEMANA = dia?d -> if d == SEGUNDA then
+					Segunda
+				else
+					if d == TERCA then
+						Terca
+					else
+						if d == QUARTA then
+							Quarta
+						else
+							STOP
+
+COMUM = acordar -> comer -> academia -> SKIP
+
+Segunda = COMUM ; aula_teste_software -> aula_metodologias_ageis -> Terca
+Terca = COMUM ; aula_engenharia_requisitos -> Quarta
+Quarta = COMUM ; aula_metodos_formais -> aula_metodologias_ageis -> aula_apsoo -> STOP
+
+-- QUESTAO 2
+-- ESTRUTURAS
+datatype BEBIDA = CAFE | CAPPUCCINO | CHOCOLATE_QUENTE
+datatype MOEDA = CINCO_CENTS | DEZ_CENTS | VINTE_CINCO_CENTS | CINQUENTA_CENTS | UM_REAL
+
+-- CANAIS
+channel escolha : BEBIDA
+channel servir : BEBIDA
+channel inserir_moeda : MOEDA
+channel escolher_bebida : BEBIDA
+
+-- MAPEAMENTO PARA IDENTIFICAR VALOR DAS MOEDAS
+VALOR_MOEDA(CINCO_CENTS) = 5
+VALOR_MOEDA(DEZ_CENTS) = 10
+VALOR_MOEDA(VINTE_CINCO_CENTS) = 25
+VALOR_MOEDA(CINQUENTA_CENTS) = 50
+VALOR_MOEDA(UM_REAL) = 100
+
+-- MAPEAMENTO PARA IDENTIFICAR O PRECO DAS BEBIDAS
+CUSTO_BEBIDA(CAFE) = 100
+CUSTO_BEBIDA(CAPPUCCINO) = 300
+CUSTO_BEBIDA(CHOCOLATE_QUENTE) = 500
+
+-- PROCESSO PARA ACUMULAR O SALDO DE MOEDAS
+INSERIR_MOEDAS(saldo) =
+    inserir_moeda?m -> 
+    	if saldo < 1000 then -- Limite para recursão. Contextualmente: limite de 10 reais
+    		INSERIR_MOEDAS(saldo + VALOR_MOEDA(m))
+    	else
+    		ESCOLHER_BEBIDA(saldo) -- Alcancou o limite da recursão, então explicitamente vai para o processo ESCOLHER_BEBIDA
+	[] ESCOLHER_BEBIDA(saldo)
+	[] STOP -- Invés de inserir uma moeda pode explicitamente PARAR a maquina
+
+ESCOLHER_BEBIDA(saldo) =
+    escolher_bebida?bebida -> 
+        if saldo >= CUSTO_BEBIDA(bebida) then 
+            SERVIR_BEBIDA(bebida, saldo - CUSTO_BEBIDA(bebida))
+        else
+            ESCOLHER_BEBIDA(saldo) -- ESCOLHER NOVAMENTE SE O SALDO NÃO FOR SUFICIENTE
+
+    [] INSERIR_MOEDAS(saldo) -- Permite inserir moedas novamente para caso deseje acrescentar mais saldo
+    [] STOP -- Invés de escolher uma bebida pode explicitamente PARAR a maquina
+
+SERVIR_BEBIDA(bebida, saldo) =
+    servir!bebida -> if saldo > 0 then
+            ESCOLHER_BEBIDA(saldo) -- PERMITE ESCOLHER OUTRA BEBIDA SE O SALDO FOR MAIOR QUE 0
+        else
+            STOP -- PARA A MAQUINA CASO O SALDO SEJA 0
+
+MAQUINA = INSERIR_MOEDAS(0)
