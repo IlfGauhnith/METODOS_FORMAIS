@@ -48,13 +48,13 @@ CUSTO_BEBIDA(CHOCOLATE_QUENTE) = 500
 
 -- PROCESSO PARA ACUMULAR O SALDO DE MOEDAS
 INSERIR_MOEDAS(saldo) =
-    inserir_moeda?m -> 
+    (inserir_moeda?m -> 
     	if saldo < 1000 then -- Limite para recursão. Contextualmente: limite de 10 reais
     		INSERIR_MOEDAS(saldo + VALOR_MOEDA(m))
     	else
-    		ESCOLHER_BEBIDA(saldo) -- Alcancou o limite da recursão, então explicitamente vai para o processo ESCOLHER_BEBIDA
+    		ESCOLHER_BEBIDA(saldo)) -- Alcancou o limite da recursão, então explicitamente vai para o processo ESCOLHER_BEBIDA
 	[] ESCOLHER_BEBIDA(saldo)
-	[] STOP -- Invés de inserir uma moeda pode explicitamente PARAR a maquina
+
 
 ESCOLHER_BEBIDA(saldo) =
     escolher_bebida?bebida -> 
@@ -70,6 +70,6 @@ SERVIR_BEBIDA(bebida, saldo) =
     servir!bebida -> if saldo > 0 then
             ESCOLHER_BEBIDA(saldo) -- PERMITE ESCOLHER OUTRA BEBIDA SE O SALDO FOR MAIOR QUE 0
         else
-            STOP -- PARA A MAQUINA CASO O SALDO SEJA 0
+            INSERIR_MOEDAS(saldo)
 
 MAQUINA = INSERIR_MOEDAS(0)
