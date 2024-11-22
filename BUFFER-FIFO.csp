@@ -1,0 +1,18 @@
+DATA = {0,1}
+BUFFER_LIMIT = 5
+channel in, out: DATA
+
+B(s,N) = 
+	#s < N & in?x -> B(s^<x>,N)
+	[]
+	#s > 0 & out!head(s) -> B(tail(s),N)
+	[]
+	#s == N & (
+		N*2 >= BUFFER_LIMIT & in?x -> B(s^<x>,BUFFER_LIMIT)
+		[]
+		N*2 < BUFFER_LIMIT & in?x -> B(s^<x>,N*2)
+	)
+	[]
+	#s > BUFFER_LIMIT & in?x -> error("OVERFLOW") -> STOP
+
+MAIN = B(<>,2)
