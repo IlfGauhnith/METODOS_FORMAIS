@@ -23,10 +23,12 @@ RESPOSTAS(10) = "A"
 -- <pontuacao_atual> É A PONTUACAO ATUAL DO JOGADOR. A CADA RESPOSTA CERTA INCREMENTA 1.
 ESCOLHER_QUESTAO(escolhidas, rodada_n, pontuacao_atual) = 
 	(
-			-- ESCOLHE INTERNAMENTE UM x LIMITADO PELA EXPRESSAO DEPOIS DOS ':' E O @ COMUNICA O x DO channel questao
+			-- ESCOLHE INTERNAMENTE UM x LIMITADO PELA EXPRESSAO DEPOIS DOS ':' E O @ COMUNICA O x DO CHANNEL questao
+			-- diff(QUESTOES, escolhidas) OPERACAO DE DIFERENCA DE CONJUNTOS. LIMITA A ESCOLHA DE QUESTAO PARA AS QUESTOES AINDA NAO ESCOLHIDAS
 			(rodada_n <= MAX_RODADAS & |~|x:diff(QUESTOES, escolhidas)@questao.x 
 						-> ESCOLHER_ALTERNATIVA(x, escolhidas, rodada_n, pontuacao_atual))
 		[]
+			-- RODADA ATUAL É IGUAL AO NUMERO MAXIMO DE RODADAS, O JOGO CHEGA AO FIM.
 			(rodada_n == MAX_RODADAS & STOP)
 	)
 
@@ -38,9 +40,12 @@ ESCOLHER_QUESTAO(escolhidas, rodada_n, pontuacao_atual) =
 ESCOLHER_ALTERNATIVA(questao_escolhida, escolhidas, rodada_n, pontuacao_atual) = 
 	alternativa?alt -> 
     (
-        (alt == RESPOSTAS(questao_escolhida) & ESCOLHER_QUESTAO(union(escolhidas, {questao_escolhida}), rodada_n+1, pontuacao_atual+1))
+			-- USUARIO ESCOLHEU RESPOSTA CORRETA, ACRESCE UM PONTO AO SCORE
+        	(alt == RESPOSTAS(questao_escolhida) & ESCOLHER_QUESTAO(union(escolhidas, {questao_escolhida}), rodada_n+1, pontuacao_atual+1))
         []
-        (alt != RESPOSTAS(questao_escolhida) & ESCOLHER_QUESTAO(union(escolhidas, {questao_escolhida}), rodada_n+1, pontuacao_atual-1))
+    		-- USUARIO ESCOLHEU RESPOSTA ERRADA, DESCRECE UM PONTO DO SCORE
+        	(alt != RESPOSTAS(questao_escolhida) & ESCOLHER_QUESTAO(union(escolhidas, {questao_escolhida}), rodada_n+1, pontuacao_atual-1))
     )
 
+-- PROCESSO PRINCIPAL PARA INSTANCIAR O PROCESSO QUIZZ
 MAIN = ESCOLHER_QUESTAO({}, 1, 0)
