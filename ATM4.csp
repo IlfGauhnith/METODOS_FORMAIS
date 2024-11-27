@@ -1,0 +1,48 @@
+
+CARD = { 0..9 }
+datatype pinnumbers = PIN.Int
+fpin(c) = PIN.c
+PINs = { fpin(c) | c <- CARD }
+WA = { 10,20,30,40,50 }
+
+channel incard, outcard: CARD
+channel pin: PINs
+channel req, dispense: WA
+channel refuse
+
+ATM3(saldo) = 
+ incard?c -> pin.fpin(c) -> req?n ->
+   if(saldo-n >= 0) then (
+			dispense!n -> outcard.c -> 
+				ATM3 (saldo-n)
+   ) else (
+      refuse -> outcard.c -> ATM3(saldo)
+		 )
+
+ATM4(saldo, total_disponivel) = 
+  (
+    incard?c -> 
+    pin.fpin(c) -> 
+    req?n ->
+    (
+      ((saldo - n >= 0 and n <= total_disponivel) & dispense!n -> outcard.c -> ATM4(saldo-n, total_disponivel-n))
+      []
+      ((saldo - n < 0 or n > total_disponivel) & refuse -> outcard.c -> ATM4(saldo, total_disponivel))
+    )
+  )
+
+
+-- REFINA, O EVENTO refuse QUE ACONTECE ATM4 TAMBEM ACONTECE EM ATM3 PARA TODA SEQUENCIA 
+assert ATM3(100) [T= ATM4(100, 200)
+
+
+
+
+-- NÃO REFINA, O EVENTO refuse NÃO ACONTECE EM ATM3 ATÉ O MOMENTO EM QUE O SALDO É TOTALMENTE EXAURIDO, 
+-- JÁ EM ATM4 PODE ACONTECER ANTES DE O SALDO EXAURIR, QUANDO O DINHEIRO TOTAL DISPONÍVEL NA MÁQUINA É EXAURIDO.
+
+-- PORTANTO HÁ UM COMPORTAMENTO EM ATM4 QUE NÃO ESTÁ PRESENTE EM ATM3, QUE É QUANDO O EVENTO refuse É COMUNICADO 
+-- QUANDO AINDA HÁ SALDO NA CONTA, MAS NÃO HÁ DINHEIRO NA MÁQUINA.
+
+-- POR ISSO HÁ UM OU MAIS TRACES EM ATM4 QUE NÃO ACONTECEM EM ATM3, PORTANTO ATM4 NÃO REFINA ATM3.
+assert ATM3(100) [T= ATM4(100, 50)
