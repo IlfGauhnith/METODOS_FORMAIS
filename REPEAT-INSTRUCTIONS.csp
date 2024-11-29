@@ -1,0 +1,33 @@
+-- EXECUTA <P> UMA QUANTIDADE DE VEZES IGUAL A <steps>
+-- <P> É UM PROCESSO
+-- <steps> É UM INTEIRO
+FOR(P, 0) = SKIP
+FOR(P, steps) = P ; FOR(P, steps-1)
+
+-- EXECUTA <P> ENQUANTO <expression> FOR TRUE
+-- <P> É UM PROCESSO
+-- <expression> É UM CANAL QUE INFORMA BOOLEANOS
+WHILE(P, expression) = expression?b -> if b then (P ; WHILE(P, expression)) else SKIP
+
+-- EXECUTA <P> E ENTAO CHECA SE <expression> É TRUE, SE FOR TRUE REPETE.
+-- <P> É UM PROCESSO
+-- <expression> É UM CANAL QUE INFORMA BOOLEANOS
+REPEAT_UNTIL(P, expression) = P ; expression?b -> if b then REPEAT_UNTIL(P, expression) else SKIP
+
+-- EXECUTA <P> DE ACORDO COM A QUANTIDADE DE ELEMENTOS EM <sequence>
+-- <P> É UM PROCESSO
+-- <sequence> É UMA SEQUENCIA DE ELEMENTOS
+FOR_EACH(P, sequence) = if null(sequence) then SKIP else P(head(sequence)) ; FOR_EACH(P, tail(sequence))
+
+
+
+channel condition : {true, false}
+channel dumb_ch
+
+DUMB = dumb_ch -> SKIP
+DUMB_SEQUENCIFIED(s) = dumb_ch -> SKIP
+
+MAIN_FOR = FOR(DUMB, 4)
+MAIN_WHILE = WHILE(DUMB, condition)
+MAIN_REPEAT_UNTIL = REPEAT_UNTIL(DUMB, condition)
+MAIN_FOR_EACH = FOR_EACH(DUMB_SEQUENCIFIED, <1, 2, 3>)
