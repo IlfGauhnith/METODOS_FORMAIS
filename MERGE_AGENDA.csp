@@ -6,6 +6,8 @@ datatype NOMES = N1 | N2 | N3
 
 datatype TELEFONES = T1 | T2 | T3
 
+nametype CONTATO = (NOMES,TELEFONES)
+
 MAX = 3
 
 EXEMPLO_AGENDA = <(N1,T1), (N2,T2), (N3, T3)>
@@ -89,7 +91,6 @@ unir(agenda1, agenda2) =
 
 	else -- Nome do contato na cabeça de agenda2 não encontrado em agenda1, então precisa adicionar
 		unir(agenda1^<head(agenda2)>, tail(agenda2))
-		
 
 -------------------------------------------------------------------------------
 -- Canais e processos
@@ -99,7 +100,11 @@ channel inserir : NOMES.TELEFONES
 channel consultar : NOMES.Set(TELEFONES)
 channel remover : NOMES
 channel modificar : NOMES.TELEFONES.TELEFONES
-channel migrar
+
+-- channel migrar é capaz de comunicar o POWERSET gerado pelas combinações de CONTATO.
+-- CONTATO por sua vez é formado pela combinação de NOMES e TELEFONES que por sua vez são finitos.
+-- PORTANTO, O CANAL COMUNICA VALORES FINITOS. (CALMA VAI RODAR KKKKKK)
+channel migrar: Set(CONTATO)
 
 AGENDA = Pagenda(<>)
 
@@ -119,5 +124,4 @@ Pagenda(contatos) =
             ?t_atual:tels(contatos, n)
             ?t_novo:novos(contatos, n, t_atual) -> 
             Pagenda(mod(contatos, n, t_atual, t_novo))
-    []
-    migrar -> Pagenda(unir(contatos, EXEMPLO_AGENDA))
+    []migrar?novos_contatos -> Pagenda(unir(contatos, seq(novos_contatos)))
